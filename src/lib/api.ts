@@ -1,9 +1,14 @@
-import { supabase } from './supabase';
+import { createSupabaseBrowser } from './supabase-browser';
 import { Producto, Categoria, Venta, MetodoPago } from './types';
+
+function getSupabase() {
+    return createSupabaseBrowser();
+}
 
 // ── Categorías ──
 
 export async function fetchCategorias(): Promise<Categoria[]> {
+    const supabase = getSupabase();
     const { data, error } = await supabase
         .from('categorias')
         .select('*')
@@ -17,6 +22,7 @@ export async function fetchCategorias(): Promise<Categoria[]> {
 }
 
 export async function insertCategoria(nombre: string): Promise<Categoria | null> {
+    const supabase = getSupabase();
     const { data, error } = await supabase
         .from('categorias')
         .insert({ nombre })
@@ -33,6 +39,7 @@ export async function insertCategoria(nombre: string): Promise<Categoria | null>
 // ── Productos ──
 
 export async function fetchProductos(): Promise<Producto[]> {
+    const supabase = getSupabase();
     const { data, error } = await supabase
         .from('productos')
         .select('*, categorias(id, nombre)')
@@ -48,6 +55,7 @@ export async function fetchProductos(): Promise<Producto[]> {
 export async function insertProducto(
     producto: Omit<Producto, 'id' | 'created_at' | 'categorias'>
 ): Promise<Producto | null> {
+    const supabase = getSupabase();
     const { data, error } = await supabase
         .from('productos')
         .insert(producto)
@@ -65,6 +73,7 @@ export async function updateProductoStock(
     productoId: string,
     newStock: number
 ): Promise<boolean> {
+    const supabase = getSupabase();
     const { error } = await supabase
         .from('productos')
         .update({ stock_actual: newStock })
@@ -80,6 +89,7 @@ export async function updateProductoStock(
 // ── Ventas ──
 
 export async function fetchVentas(): Promise<Venta[]> {
+    const supabase = getSupabase();
     const { data, error } = await supabase
         .from('ventas')
         .select('*, detalle_ventas(*, productos(id, nombre, sku))')
@@ -100,6 +110,8 @@ interface NuevaVenta {
 }
 
 export async function insertVenta(venta: NuevaVenta): Promise<Venta | null> {
+    const supabase = getSupabase();
+
     // 1. Insert the sale
     const { data: ventaData, error: ventaError } = await supabase
         .from('ventas')

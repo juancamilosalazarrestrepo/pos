@@ -7,28 +7,44 @@ import {
     LayoutDashboard,
     Package,
     ShoppingCart,
+    Users,
     Menu,
     X,
     Store,
     Settings,
     LogOut,
+    Shield,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useAuth } from './AuthProvider';
 
-const navItems = [
-    { href: '/', label: 'Dashboard', icon: LayoutDashboard },
-    { href: '/inventario', label: 'Inventario', icon: Package },
-    { href: '/pos', label: 'Terminal POS', icon: ShoppingCart },
+const allNavItems = [
+    { href: '/', label: 'Dashboard', icon: LayoutDashboard, roles: ['admin'] },
+    { href: '/inventario', label: 'Inventario', icon: Package, roles: ['admin', 'inventario'] },
+    { href: '/pos', label: 'Terminal POS', icon: ShoppingCart, roles: ['admin', 'cajero'] },
+    { href: '/usuarios', label: 'Usuarios', icon: Users, roles: ['admin'] },
 ];
+
+const rolLabels: Record<string, { label: string; color: string }> = {
+    admin: { label: 'Administrador', color: 'text-primary-400' },
+    cajero: { label: 'Cajero', color: 'text-emerald-400' },
+    inventario: { label: 'Inventario', color: 'text-amber-400' },
+};
 
 export default function Sidebar() {
     const pathname = usePathname();
     const [mobileOpen, setMobileOpen] = useState(false);
+    const { perfil, signOut, loading } = useAuth();
+
+    const userRole = perfil?.rol || 'cajero';
+    const navItems = allNavItems.filter((item) => item.roles.includes(userRole));
 
     const isActive = (href: string) => {
         if (href === '/') return pathname === '/';
         return pathname.startsWith(href);
     };
+
+    const rolInfo = rolLabels[userRole] || rolLabels.cajero;
 
     const navContent = (
         <>
@@ -73,19 +89,35 @@ export default function Sidebar() {
                 })}
             </nav>
 
-            {/* Footer */}
-            <div className="px-3 py-4 border-t border-surface-800 space-y-1">
-                <button className="flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-sm font-medium text-surface-400 hover:text-white hover:bg-surface-800 transition-all duration-200">
-                    <Settings size={20} />
-                    Configuración
-                </button>
-                <button className="flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-sm font-medium text-surface-400 hover:text-red-400 hover:bg-red-500/10 transition-all duration-200">
+            {/* User Profile & Footer */}
+            <div className="px-3 py-4 border-t border-surface-800 space-y-3">
+                {/* User Info */}
+                {perfil && (
+                    <div className="px-3 py-2.5 rounded-xl bg-surface-800/50">
+                        <div className="flex items-center gap-2">
+                            <div className="w-8 h-8 rounded-lg bg-primary-600/20 flex items-center justify-center">
+                                <Shield size={14} className={rolInfo.color} />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                                <p className="text-sm font-medium text-white truncate">{perfil.nombre}</p>
+                                <p className={cn('text-xs font-medium', rolInfo.color)}>{rolInfo.label}</p>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                <button
+                    onClick={signOut}
+                    className="flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-sm font-medium text-surface-400 hover:text-red-400 hover:bg-red-500/10 transition-all duration-200"
+                >
                     <LogOut size={20} />
                     Cerrar Sesión
                 </button>
             </div>
         </>
     );
+
+    if (loading) return null;
 
     return (
         <>

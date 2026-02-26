@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { supabase } from '@/lib/supabase';
+import { createSupabaseBrowser } from '@/lib/supabase-browser';
 import { CheckCircle2, XCircle, Loader2 } from 'lucide-react';
 import Button from '@/components/ui/Button';
 
@@ -14,6 +14,7 @@ type TestResult = {
 export default function TestPage() {
     const [results, setResults] = useState<TestResult[]>([]);
     const [running, setRunning] = useState(false);
+    const supabase = createSupabaseBrowser();
 
     const runTests = async () => {
         setRunning(true);
