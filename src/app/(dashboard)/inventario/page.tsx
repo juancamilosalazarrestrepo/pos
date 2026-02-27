@@ -16,7 +16,8 @@ export default function InventarioPage() {
 
     const loadData = useCallback(async () => {
         setLoading(true);
-        const [prods, cats] = await Promise.all([fetchProductos(), fetchCategorias()]);
+        const prods = await fetchProductos();
+        const cats = await fetchCategorias();
         setProductos(prods);
         setCategorias(cats);
         setLoading(false);
