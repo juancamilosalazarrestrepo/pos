@@ -21,7 +21,7 @@ export async function crearUsuarioAdmin(formData: any) {
         const { data, error } = await supabaseAdmin.auth.admin.createUser({
             email: formData.email,
             password: formData.password,
-            email_confirm: true,
+            email_confirm: false, // Set to false to trigger the confirmation email
             user_metadata: {
                 nombre: formData.nombre,
                 rol: formData.rol,
