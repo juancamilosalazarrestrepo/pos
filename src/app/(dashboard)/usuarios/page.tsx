@@ -73,30 +73,30 @@ export default function UsuariosPage() {
         setError('');
 
         try {
-            // Sign up the new user via Supabase Auth
-            const { error: authError } = await supabase.auth.signUp({
+            // Import the server action dynamically to avoid client component issues
+            const { crearUsuarioAdmin } = await import('@/app/actions/usuarios');
+
+            // Call the server action which uses the Service Role Key
+            const result = await crearUsuarioAdmin({
                 email: form.email,
                 password: form.password,
-                options: {
-                    data: {
-                        nombre: form.nombre,
-                        rol: form.rol,
-                    },
-                },
+                nombre: form.nombre,
+                rol: form.rol
             });
 
-            if (authError) {
-                setError(authError.message);
+            if (result.error) {
+                setError(result.error);
                 setFormLoading(false);
                 return;
             }
 
             setModalOpen(false);
             setForm({ nombre: '', email: '', password: '', rol: 'cajero' });
-            // Wait a moment for the trigger to create the profile
+
+            // Wait a moment for the DB trigger to create the profile row
             setTimeout(() => loadPerfiles(), 1000);
-        } catch {
-            setError('Error al crear usuario');
+        } catch (err: any) {
+            setError(err.message || 'Error al crear usuario');
         } finally {
             setFormLoading(false);
         }
