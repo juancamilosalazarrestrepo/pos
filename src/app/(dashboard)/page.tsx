@@ -25,13 +25,17 @@ export default function DashboardPage() {
       // DEBUG CLAVE PARA VERCEL
       console.log("=== VERCEL DEBUG INFO ===");
       console.log("NEXT_PUBLIC_SUPABASE_URL existe?", !!process.env.NEXT_PUBLIC_SUPABASE_URL);
-      console.log("NEXT_PUBLIC_SUPABASE_ANON_KEY existe?", !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
+      console.log("URL Value:", process.env.NEXT_PUBLIC_SUPABASE_URL);
+      console.log("ANON_KEY First 15 chars:", process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.substring(0, 15) + "...");
+      console.log("ANON_KEY Length:", process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.length);
 
       const supabase = createSupabaseBrowser();
       const { data: { session } } = await supabase.auth.getSession();
       console.log("Session actual en dashboard:", !!session);
 
-      const [prods, sales] = await Promise.all([fetchProductos(), fetchVentas()]);
+      const prods = await fetchProductos();
+      const sales = await fetchVentas();
+
       setProductos(prods);
       setVentas(sales);
       setLoading(false);
