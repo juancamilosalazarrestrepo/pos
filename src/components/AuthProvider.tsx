@@ -37,19 +37,32 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     useEffect(() => {
         // Get initial session
         const getSession = async () => {
-            const { data: { user } } = await supabase.auth.getUser();
-            setUser(user);
+            console.log("AuthProvider: Buscando usuario inicial...");
+            try {
+                const { data: { user }, error: userError } = await supabase.auth.getUser();
+                if (userError) console.error("AuthProvider Error getUser:", userError);
 
-            if (user) {
-                const { data } = await supabase
-                    .from('perfiles')
-                    .select('*')
-                    .eq('id', user.id)
-                    .single();
-                setPerfil(data);
+                console.log("AuthProvider: Usuario encontrado:", user?.id || "Ninguno");
+                setUser(user);
+
+                if (user) {
+                    console.log("AuthProvider: Buscando perfil para:", user.id);
+                    const { data: profileData, error: profileError } = await supabase
+                        .from('perfiles')
+                        .select('*')
+                        .eq('id', user.id)
+                        .single();
+
+                    if (profileError) console.error("AuthProvider Error perfil:", profileError);
+                    console.log("AuthProvider: Perfil cargado:", profileData?.rol || "Sin rol");
+                    setPerfil(profileData);
+                }
+            } catch (err) {
+                console.error("AuthProvider: EXCEPCIÓN en getSession:", err);
+            } finally {
+                console.log("AuthProvider: Marcando loading = false");
+                setLoading(false);
             }
-
-            setLoading(false);
         };
 
         getSession();
@@ -57,10 +70,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         // Listen for auth changes
         const { data: { subscription } } = supabase.auth.onAuthStateChange(
             async (event, session) => {
+                console.log("AuthProvider: AUTH CHANGE EVENT:", event);
                 const currentUser = session?.user ?? null;
                 setUser(currentUser);
 
                 if (currentUser) {
+                    console.log("AuthProvider: Cargando perfil por auth change...");
                     const { data } = await supabase
                         .from('perfiles')
                         .select('*')
