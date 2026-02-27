@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { createSupabaseBrowser } from '@/lib/supabase-browser';
+import { useRouter } from 'next/navigation';
 import { Store, Mail, Lock, Loader2, AlertCircle } from 'lucide-react';
 
 export default function LoginPage() {
@@ -9,6 +10,7 @@ export default function LoginPage() {
     const [password, setPassword] = useState('');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
+    const router = useRouter();
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -32,8 +34,11 @@ export default function LoginPage() {
             return;
         }
 
-        // Redirect to dashboard
-        window.location.href = '/';
+        // Wait a tiny bit for the session cookie to be fully written by the browser before redirecting
+        setTimeout(() => {
+            router.refresh();
+            router.push('/');
+        }, 100);
     };
 
     return (
