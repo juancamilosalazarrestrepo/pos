@@ -19,20 +19,24 @@ export default function DashboardPage() {
   const [productos, setProductos] = useState<Producto[]>([]);
   const [ventas, setVentas] = useState<Venta[]>([]);
   const [loading, setLoading] = useState(true);
-  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   useEffect(() => {
     async function load() {
-      try {
-        const prods = await fetchProductos();
-        const sales = await fetchVentas();
-        setProductos(prods);
-        setVentas(sales);
-      } catch (err: any) {
-        setErrorMsg(err.message || String(err));
-      } finally {
-        setLoading(false);
-      }
+      // DEBUG CLAVE PARA VERCEL
+      console.log("=== VERCEL DEBUG INFO ===");
+      console.log("NEXT_PUBLIC_SUPABASE_URL existe?", !!process.env.NEXT_PUBLIC_SUPABASE_URL);
+      console.log("NEXT_PUBLIC_SUPABASE_ANON_KEY existe?", !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
+
+      const supabase = createSupabaseBrowser();
+      const { data: { session } } = await supabase.auth.getSession();
+      console.log("Session actual en dashboard:", !!session);
+
+      const prods = await fetchProductos();
+      const sales = await fetchVentas();
+
+      setProductos(prods);
+      setVentas(sales);
+      setLoading(false);
     }
     load();
   }, []);
@@ -44,14 +48,6 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto">
-      {/* Error Banner */}
-      {errorMsg && (
-        <div className="rounded-xl bg-red-900/20 border border-red-500/50 p-4 mb-6">
-          <p className="text-sm font-semibold text-red-400">Error cargando datos:</p>
-          <p className="text-xs font-mono text-red-300 mt-1">{errorMsg}</p>
-        </div>
-      )}
-
       {/* Header */}
       <div>
         <h1 className="text-2xl font-bold text-white tracking-tight">Dashboard</h1>
