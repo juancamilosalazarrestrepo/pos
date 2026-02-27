@@ -19,23 +19,37 @@ export default function DashboardPage() {
   const [productos, setProductos] = useState<Producto[]>([]);
   const [ventas, setVentas] = useState<Venta[]>([]);
   const [loading, setLoading] = useState(true);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   useEffect(() => {
     async function load() {
-      const supabase = createSupabaseBrowser();
-      await supabase.auth.getSession();
+      console.log("=== INICIANDO LOAD EN DASHBOARD ===");
+      try {
+        const supabase = createSupabaseBrowser();
+        const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
 
-      console.log("=== VERCEL DEBUG INFO ===");
-      console.log("NEXT_PUBLIC_SUPABASE_URL:", process.env.NEXT_PUBLIC_SUPABASE_URL);
-      console.log("NEXT_PUBLIC_SUPABASE_ANON_KEY (First 15 chars):", process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.substring(0, 15) + "...");
-      console.log("NEXT_PUBLIC_SUPABASE_ANON_KEY Length:", process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.length);
+        console.log("Sesión verificada en Dashboard:", {
+          hasSession: !!sessionData?.session,
+          sessionError: sessionError?.message,
+          userId: sessionData?.session?.user?.id
+        });
 
-      const prods = await fetchProductos();
-      const sales = await fetchVentas();
+        console.log("Llamando a fetchProductos...");
+        const prods = await fetchProductos();
+        console.log("fetchProductos retornó:", prods?.length, "items");
 
-      setProductos(prods);
-      setVentas(sales);
-      setLoading(false);
+        console.log("Llamando a fetchVentas...");
+        const sales = await fetchVentas();
+        console.log("fetchVentas retornó:", sales?.length, "items");
+
+        setProductos(prods);
+        setVentas(sales);
+      } catch (err: any) {
+        console.error("ERROR FATAL EN LOAD DASHBOARD:", err);
+        setErrorMsg(err.message || String(err));
+      } finally {
+        setLoading(false);
+      }
     }
     load();
   }, []);
@@ -47,6 +61,14 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto">
+      {/* Error Banner */}
+      {errorMsg && (
+        <div className="rounded-xl bg-red-900/20 border border-red-500/50 p-4 mb-6">
+          <p className="text-sm font-semibold text-red-400">Error cargando datos:</p>
+          <p className="text-xs font-mono text-red-300 mt-1">{errorMsg}</p>
+        </div>
+      )}
+
       {/* Header */}
       <div>
         <h1 className="text-2xl font-bold text-white tracking-tight">Dashboard</h1>
