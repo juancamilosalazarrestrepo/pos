@@ -31,9 +31,7 @@ export default function DashboardPage() {
       const { data: { session } } = await supabase.auth.getSession();
       console.log("Session actual en dashboard:", !!session);
 
-      const prods = await fetchProductos();
-      const sales = await fetchVentas();
-
+      const [prods, sales] = await Promise.all([fetchProductos(), fetchVentas()]);
       setProductos(prods);
       setVentas(sales);
       setLoading(false);

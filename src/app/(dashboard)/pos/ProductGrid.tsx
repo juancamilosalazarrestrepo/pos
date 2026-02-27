@@ -17,8 +17,7 @@ export default function ProductGrid() {
 
     useEffect(() => {
         async function load() {
-            const prods = await fetchProductos();
-            const cats = await fetchCategorias();
+            const [prods, cats] = await Promise.all([fetchProductos(), fetchCategorias()]);
             setProductos(prods);
             setCategorias(cats);
             setLoading(false);
