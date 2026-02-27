@@ -25,15 +25,6 @@ export default function DashboardPage() {
     async function load() {
       console.log("=== INICIANDO LOAD EN DASHBOARD ===");
       try {
-        const supabase = createSupabaseBrowser();
-        const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
-
-        console.log("Sesión verificada en Dashboard:", {
-          hasSession: !!sessionData?.session,
-          sessionError: sessionError?.message,
-          userId: sessionData?.session?.user?.id
-        });
-
         console.log("Llamando a fetchProductos...");
         const prods = await fetchProductos();
         console.log("fetchProductos retornó:", prods?.length, "items");
