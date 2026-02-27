@@ -8,6 +8,7 @@ function getSupabase() {
 // ── Categorías ──
 
 export async function fetchCategorias(): Promise<Categoria[]> {
+    console.log("=> fetchCategorias() iniciada");
     const supabase = getSupabase();
     const { data, error } = await supabase
         .from('categorias')
@@ -39,17 +40,34 @@ export async function insertCategoria(nombre: string): Promise<Categoria | null>
 // ── Productos ──
 
 export async function fetchProductos(): Promise<Producto[]> {
-    const supabase = getSupabase();
-    const { data, error } = await supabase
-        .from('productos')
-        .select('*, categorias(id, nombre)')
-        .order('nombre');
+    console.log("=> fetchProductos() iniciada");
+    try {
+        const supabase = getSupabase();
+        console.log("fetchProductos supabase client:", !!supabase);
 
-    if (error) {
-        console.error('Error fetching productos:', error);
+        // Check session right before querying
+        const { data: sessionData } = await supabase.auth.getSession();
+        console.log("fetchProductos session check:", !!sessionData.session);
+
+        const result = await supabase
+            .from('productos')
+            .select('*, categorias(id, nombre)')
+            .order('nombre');
+
+        console.log("fetchProductos query result:", {
+            error: result.error,
+            count: result.data?.length
+        });
+
+        if (result.error) {
+            console.error('Error fetching productos:', result.error);
+            return [];
+        }
+        return result.data || [];
+    } catch (err) {
+        console.error("fetchProductos FETCH CATCH ERROR:", err);
         return [];
     }
-    return data || [];
 }
 
 export async function insertProducto(
@@ -89,18 +107,30 @@ export async function updateProductoStock(
 // ── Ventas ──
 
 export async function fetchVentas(): Promise<Venta[]> {
-    const supabase = getSupabase();
-    const { data, error } = await supabase
-        .from('ventas')
-        .select('*, detalle_ventas(*, productos(id, nombre, sku))')
-        .order('created_at', { ascending: false })
-        .limit(20);
+    console.log("=> fetchVentas() iniciada");
+    try {
+        const supabase = getSupabase();
 
-    if (error) {
-        console.error('Error fetching ventas:', error);
+        const result = await supabase
+            .from('ventas')
+            .select('*, detalle_ventas(*, productos(id, nombre, sku))')
+            .order('created_at', { ascending: false })
+            .limit(20);
+
+        console.log("fetchVentas query result:", {
+            error: result.error,
+            count: result.data?.length
+        });
+
+        if (result.error) {
+            console.error('Error fetching ventas:', result.error);
+            return [];
+        }
+        return result.data || [];
+    } catch (err) {
+        console.error("fetchVentas CATCH ERROR:", err);
         return [];
     }
-    return data || [];
 }
 
 interface NuevaVenta {
