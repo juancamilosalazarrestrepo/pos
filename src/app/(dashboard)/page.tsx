@@ -15,14 +15,20 @@ import { formatCOP } from '@/lib/utils';
 import { useAuth } from '@/components/AuthProvider';
 
 export default function DashboardPage() {
-  const { supabase } = useAuth();
+  const { supabase, loading: authLoading } = useAuth();
   const [productos, setProductos] = useState<Producto[]>([]);
   const [ventas, setVentas] = useState<Venta[]>([]);
   const [loading, setLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!supabase) return;
+    // CRITICAL: Wait for AuthProvider to finish getUser() + onAuthStateChange()
+    // before making any queries on the same Supabase client
+    if (authLoading) {
+      console.log("Dashboard: esperando a que AuthProvider termine...");
+      return;
+    }
+    console.log("Dashboard: AuthProvider listo, iniciando carga de datos...");
 
     async function load() {
       console.log("=== INICIANDO LOAD EN DASHBOARD ===");
@@ -62,7 +68,7 @@ export default function DashboardPage() {
       }
     }
     load();
-  }, [supabase]);
+  }, [supabase, authLoading]);
 
   const today = new Date().toISOString().split('T')[0];
   const todayVentas = ventas.filter((v) => v.created_at.startsWith(today));
