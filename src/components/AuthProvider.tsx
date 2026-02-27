@@ -70,23 +70,38 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         // Listen for auth changes
         const { data: { subscription } } = supabase.auth.onAuthStateChange(
             async (event, session) => {
-                console.log("AuthProvider: AUTH CHANGE EVENT:", event);
+                console.log("AuthProvider: AUTH CHANGE EVENT:", event, "User:", session?.user?.id);
                 const currentUser = session?.user ?? null;
                 setUser(currentUser);
 
-                if (currentUser) {
-                    console.log("AuthProvider: Cargando perfil por auth change...");
-                    const { data } = await supabase
+                if (!currentUser) {
+                    setPerfil(null);
+                    setLoading(false);
+                    return;
+                }
+
+                try {
+                    console.log("AuthProvider: Cargando perfil por auth change para:", currentUser.id);
+                    // Usamos un timeout manual o Promise.race si fuera necesario, 
+                    // pero por ahora solo aseguramos que no bloquee el loading state.
+                    const { data, error } = await supabase
                         .from('perfiles')
                         .select('*')
                         .eq('id', currentUser.id)
                         .single();
-                    setPerfil(data);
-                } else {
-                    setPerfil(null);
-                }
 
-                setLoading(false);
+                    if (error) {
+                        console.error("AuthProvider: Error cargando perfil en evento:", error.message);
+                    } else {
+                        console.log("AuthProvider: Perfil cargado exitosamente (event):", data?.rol);
+                        setPerfil(data);
+                    }
+                } catch (err) {
+                    console.error("AuthProvider: Excepción cargando perfil en evento:", err);
+                } finally {
+                    console.log("AuthProvider: Auth check completo, desactivando loading");
+                    setLoading(false);
+                }
             }
         );
 
