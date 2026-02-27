@@ -25,6 +25,11 @@ export default function DashboardPage() {
       const supabase = createSupabaseBrowser();
       await supabase.auth.getSession();
 
+      console.log("=== VERCEL DEBUG INFO ===");
+      console.log("NEXT_PUBLIC_SUPABASE_URL:", process.env.NEXT_PUBLIC_SUPABASE_URL);
+      console.log("NEXT_PUBLIC_SUPABASE_ANON_KEY (First 15 chars):", process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.substring(0, 15) + "...");
+      console.log("NEXT_PUBLIC_SUPABASE_ANON_KEY Length:", process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.length);
+
       const prods = await fetchProductos();
       const sales = await fetchVentas();
 
