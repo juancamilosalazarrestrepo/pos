@@ -16,6 +16,7 @@ interface AuthContextType {
     user: User | null;
     perfil: Perfil | null;
     loading: boolean;
+    supabase: ReturnType<typeof createSupabaseBrowser>;
     signOut: () => Promise<void>;
 }
 
@@ -23,6 +24,7 @@ const AuthContext = createContext<AuthContextType>({
     user: null,
     perfil: null,
     loading: true,
+    supabase: createSupabaseBrowser(),
     signOut: async () => { },
 });
 
@@ -84,7 +86,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
 
     return (
-        <AuthContext.Provider value={{ user, perfil, loading, signOut }}>
+        <AuthContext.Provider value={{ user, perfil, loading, supabase, signOut }}>
             {children}
         </AuthContext.Provider>
     );

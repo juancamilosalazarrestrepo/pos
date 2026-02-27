@@ -10,31 +10,50 @@ import {
 import KPICard from '@/components/dashboard/KPICard';
 import RecentTransactions from '@/components/dashboard/RecentTransactions';
 import LowStockAlert from '@/components/dashboard/LowStockAlert';
-import { fetchProductos, fetchVentas } from '@/lib/api';
 import { Producto, Venta } from '@/lib/types';
 import { formatCOP } from '@/lib/utils';
-import { createSupabaseBrowser } from '@/lib/supabase-browser';
+import { useAuth } from '@/components/AuthProvider';
 
 export default function DashboardPage() {
+  const { supabase } = useAuth();
   const [productos, setProductos] = useState<Producto[]>([]);
   const [ventas, setVentas] = useState<Venta[]>([]);
   const [loading, setLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   useEffect(() => {
+    if (!supabase) return;
+
     async function load() {
       console.log("=== INICIANDO LOAD EN DASHBOARD ===");
       try {
         console.log("Llamando a fetchProductos...");
-        const prods = await fetchProductos();
+        const { data: prods, error: prodsError } = await supabase
+          .from('productos')
+          .select('*, categorias(id, nombre)')
+          .order('nombre');
+
+        if (prodsError) {
+          console.error("Error productos:", prodsError);
+          setErrorMsg("Error productos: " + prodsError.message);
+        }
         console.log("fetchProductos retornó:", prods?.length, "items");
 
         console.log("Llamando a fetchVentas...");
-        const sales = await fetchVentas();
+        const { data: sales, error: salesError } = await supabase
+          .from('ventas')
+          .select('*, detalle_ventas(*, productos(id, nombre, sku))')
+          .order('created_at', { ascending: false })
+          .limit(20);
+
+        if (salesError) {
+          console.error("Error ventas:", salesError);
+          setErrorMsg("Error ventas: " + salesError.message);
+        }
         console.log("fetchVentas retornó:", sales?.length, "items");
 
-        setProductos(prods);
-        setVentas(sales);
+        setProductos(prods || []);
+        setVentas(sales || []);
       } catch (err: any) {
         console.error("ERROR FATAL EN LOAD DASHBOARD:", err);
         setErrorMsg(err.message || String(err));
@@ -43,7 +62,7 @@ export default function DashboardPage() {
       }
     }
     load();
-  }, []);
+  }, [supabase]);
 
   const today = new Date().toISOString().split('T')[0];
   const todayVentas = ventas.filter((v) => v.created_at.startsWith(today));
@@ -68,41 +87,33 @@ export default function DashboardPage() {
         </p>
       </div>
 
-      {/* KPI Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+      {/* KPI Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <KPICard
-          title="Ventas del Día"
-          value={loading ? '...' : formatCOP(todaySales)}
+          title="Ventas Hoy"
+          value={formatCOP(todaySales)}
           icon={DollarSign}
-          iconColor="text-emerald-400"
-          iconBg="bg-emerald-500/15"
         />
         <KPICard
-          title="Transacciones Hoy"
-          value={loading ? '...' : todayVentas.length.toString()}
-          icon={ShoppingBag}
-          iconColor="text-primary-400"
-          iconBg="bg-primary-500/15"
-        />
-        <KPICard
-          title="Productos Bajo Stock"
-          value={loading ? '...' : lowStockCount.toString()}
-          icon={AlertTriangle}
-          iconColor="text-amber-400"
-          iconBg="bg-amber-500/15"
-        />
-        <KPICard
-          title="Total Productos"
-          value={loading ? '...' : productos.length.toString()}
+          title="Transacciones"
+          value={String(todayVentas.length)}
           icon={TrendingUp}
-          iconColor="text-cyan-400"
-          iconBg="bg-cyan-500/15"
+        />
+        <KPICard
+          title="Productos"
+          value={String(productos.length)}
+          icon={ShoppingBag}
+        />
+        <KPICard
+          title="Stock Bajo"
+          value={String(lowStockCount)}
+          icon={AlertTriangle}
         />
       </div>
 
-      {/* Content Grid */}
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-        <div className="xl:col-span-2">
+      {/* Bottom Section */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2">
           <RecentTransactions ventas={ventas} loading={loading} />
         </div>
         <div>
