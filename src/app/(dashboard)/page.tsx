@@ -22,7 +22,6 @@ export default function DashboardPage() {
 
   useEffect(() => {
     async function load() {
-      // DEBUG CLAVE PARA VERCEL
       console.log("=== VERCEL DEBUG INFO ===");
       console.log("NEXT_PUBLIC_SUPABASE_URL existe?", !!process.env.NEXT_PUBLIC_SUPABASE_URL);
       console.log("NEXT_PUBLIC_SUPABASE_ANON_KEY existe?", !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
@@ -31,12 +30,21 @@ export default function DashboardPage() {
       const { data: { session } } = await supabase.auth.getSession();
       console.log("Session actual en dashboard:", !!session);
 
-      const [prods, sales] = await Promise.all([fetchProductos(), fetchVentas()]);
+      console.log("=> Llamando a fetchProductos()...");
+      const prods = await fetchProductos();
+      console.log("=> fetchProductos retornó", prods?.length, "items");
+
+      console.log("=> Llamando a fetchVentas()...");
+      const sales = await fetchVentas();
+      console.log("=> fetchVentas retornó", sales?.length, "items");
+
       setProductos(prods);
       setVentas(sales);
       setLoading(false);
     }
-    load();
+
+    console.log("=> useEffect disparado, ejecutando load()");
+    load().catch(err => console.error("!!! ERROR EN LOAD():", err));
   }, []);
 
   const today = new Date().toISOString().split('T')[0];
