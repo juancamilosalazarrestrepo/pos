@@ -32,7 +32,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const [user, setUser] = useState<User | null>(null);
     const [perfil, setPerfil] = useState<Perfil | null>(null);
     const [loading, setLoading] = useState(true);
-    const supabase = createSupabaseBrowser();
+    const [supabase] = useState(() => createSupabaseBrowser());
 
     useEffect(() => {
         // Get initial session
