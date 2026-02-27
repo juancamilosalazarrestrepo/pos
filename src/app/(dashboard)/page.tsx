@@ -13,6 +13,7 @@ import LowStockAlert from '@/components/dashboard/LowStockAlert';
 import { fetchProductos, fetchVentas } from '@/lib/api';
 import { Producto, Venta } from '@/lib/types';
 import { formatCOP } from '@/lib/utils';
+import { createSupabaseBrowser } from '@/lib/supabase-browser';
 
 export default function DashboardPage() {
   const [productos, setProductos] = useState<Producto[]>([]);
@@ -21,6 +22,15 @@ export default function DashboardPage() {
 
   useEffect(() => {
     async function load() {
+      // DEBUG CLAVE PARA VERCEL
+      console.log("=== VERCEL DEBUG INFO ===");
+      console.log("NEXT_PUBLIC_SUPABASE_URL existe?", !!process.env.NEXT_PUBLIC_SUPABASE_URL);
+      console.log("NEXT_PUBLIC_SUPABASE_ANON_KEY existe?", !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
+
+      const supabase = createSupabaseBrowser();
+      const { data: { session } } = await supabase.auth.getSession();
+      console.log("Session actual en dashboard:", !!session);
+
       const [prods, sales] = await Promise.all([fetchProductos(), fetchVentas()]);
       setProductos(prods);
       setVentas(sales);
