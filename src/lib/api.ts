@@ -8,7 +8,6 @@ function getSupabase() {
 // ── Categorías ──
 
 export async function fetchCategorias(): Promise<Categoria[]> {
-    console.log("=> fetchCategorias() iniciada");
     const supabase = getSupabase();
     const { data, error } = await supabase
         .from('categorias')
@@ -40,24 +39,13 @@ export async function insertCategoria(nombre: string): Promise<Categoria | null>
 // ── Productos ──
 
 export async function fetchProductos(): Promise<Producto[]> {
-    console.log("=> fetchProductos() iniciada");
     try {
         const supabase = getSupabase();
-        console.log("fetchProductos supabase client:", !!supabase);
-
-        // Check session right before querying
-        const { data: sessionData } = await supabase.auth.getSession();
-        console.log("fetchProductos session check:", !!sessionData.session);
 
         const result = await supabase
             .from('productos')
             .select('*, categorias(id, nombre)')
             .order('nombre');
-
-        console.log("fetchProductos query result:", {
-            error: result.error,
-            count: result.data?.length
-        });
 
         if (result.error) {
             console.error('Error fetching productos:', result.error);
@@ -107,7 +95,6 @@ export async function updateProductoStock(
 // ── Ventas ──
 
 export async function fetchVentas(): Promise<Venta[]> {
-    console.log("=> fetchVentas() iniciada");
     try {
         const supabase = getSupabase();
 
@@ -116,11 +103,6 @@ export async function fetchVentas(): Promise<Venta[]> {
             .select('*, detalle_ventas(*, productos(id, nombre, sku))')
             .order('created_at', { ascending: false })
             .limit(20);
-
-        console.log("fetchVentas query result:", {
-            error: result.error,
-            count: result.data?.length
-        });
 
         if (result.error) {
             console.error('Error fetching ventas:', result.error);
